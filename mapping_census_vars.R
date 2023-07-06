@@ -116,6 +116,6 @@ final_map <- ggdraw(
     )
 
 
-ggsave("./images/final.png", final_map, width = 9, height = 10)
+ggsave("./images/final.png", final_map, width = 9, height = 10, bg = "white")
 
 
