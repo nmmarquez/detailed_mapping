@@ -36,8 +36,10 @@ basic_map <- mhi_raw_sf %>%
     theme_void(base_size = 14) +
     labs(fill="Median\nHousehold\nIncome") +
     ggtitle(
-        "Seattle Median Houshold Income",
+        "Seattle Median Household Income",
         "MHI by Census Tract")
+
+ggsave("images/raw.png", basic_map,  width = 9*.7, height = 10*.7, bg = "white")
 
 # remove water
 mhi_sf <- mhi_raw_sf %>%
@@ -57,6 +59,9 @@ road_map <- ggplot() +
     theme_void(base_size = 14) +
     labs(fill="Median\nHousehold\nIncome") +
     theme(legend.position = c(1.13,.37), legend.background=element_blank())
+
+ggsave(
+    "images/updated.png", road_map,  width = 9*.7, height = 10*.7, bg = "white")
 
 # what are the geographies we want to focus on
 keep_geos <- str_c(
@@ -114,13 +119,13 @@ final_map <- ggdraw(
         x=.01,
         y=.01) +
     draw_text(
-        "Seattle Median Houshold Income",
-        x = .22,
+        "Seattle Median Household Income",
+        x = .215,
         y = .9,
         size = 24) +
     draw_text(
         "MHI by Census Tract",
-        x = .112,
+        x = .10,
         y = .85,
         size = 18
     )
