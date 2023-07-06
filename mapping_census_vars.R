@@ -112,10 +112,17 @@ final_map <- ggdraw(
         width = .36,
         height = .36,
         x=.01,
-        y=.01
+        y=.01) +
+    draw_text(
+        "Seattle Median Houshold Income",
+        x = .22,
+        y = .9,
+        size = 24) +
+    draw_text(
+        "MHI by Census Tract",
+        x = .112,
+        y = .85,
+        size = 18
     )
 
-
 ggsave("./images/final.png", final_map, width = 9, height = 10, bg = "white")
-
-
