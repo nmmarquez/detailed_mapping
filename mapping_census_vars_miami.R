@@ -88,6 +88,7 @@ inlet_map <- cropped_mhi_sf %>%
     scale_fill_ordinal(na.value = "grey50", na.translate=FALSE) +
     theme_void(base_size = 14) +
     theme(legend.position = "bottom") +
+    guides(fill=guide_legend(nrow=2,byrow=TRUE)) +
     layer_spatial(
         data=st_bbox(st_intersection(st_buffer(mhi_sf, 1e-5), miami_beach)),
         alpha = 0,
@@ -125,4 +126,4 @@ final_map <- ggdraw(
 
 final_map
 
-ggsave("./images/final.png", final_map, width = 9, height = 10, bg = "white")
+ggsave("./images/final.png", final_map, width = 12, height = 10, bg = "white")
