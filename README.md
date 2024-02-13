@@ -2,7 +2,7 @@
 
 ### Before
 
-Map of Seattle tracts taken directly from census APIs.
+Map of Miami-Dade tracts taken directly from census APIs.
 
 <img src="images/raw.png" alt="before" width="700"/>
 
@@ -14,6 +14,6 @@ Removed water features and added roads for context.
 
 ### With inlet for spatial zoom
 
-Add a new sub map which has a zoomed in version of downtown with added context like road names.
+Add a new sub map which has a zoomed in version of Miami-Beach with added context like road names.
 
 <img src="images/final.png" alt="inlet" width="700"/>

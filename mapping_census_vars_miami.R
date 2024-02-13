@@ -8,20 +8,22 @@ library(tidyterra) # easy plotting of map tiles
 library(cowplot) # combine multiple plots together
 library(ggspatial) # plot spatial objects like bounding boxes
 
-# pull Seattle spatial object
-seattle <- places("WA", year = 2018, class = "sf") %>%
-    filter(NAME == "Seattle") %>%
+# pull Miami Beach spatial object
+miami_beach <- places("FL", year = 2022, class = "sf") %>%
+    filter(NAME == "Miami Beach") %>%
     st_transform(32148)
 
 # pull tract level mhi data
 mhi_raw_sf <- get_acs(
-    geography = "tract", variables = "B19013_001", state = "WA",
-    county = "King", geometry = TRUE) %>%
+    geography = "tract", variables = "B19013_001", state = "FL",
+    county = "Miami-Dade", geometry = TRUE, year = 2022) %>%
     st_transform(32148) %>%
-    # add some wiggle room around shape
-    st_buffer(1e-5) %>%
-    # cut the outline of Seattle
-    st_intersection(seattle) %>%
+    # remove some of the larger census tracts on the outskirts of the county
+    filter(GEOID != "12086011500") %>%
+    filter(GEOID != "12086011408") %>%
+    filter(GEOID != "12086011412") %>%
+    filter(GEOID != "12086981200") %>%
+    filter(GEOID != "12086980100") %>%
     mutate(MHIQ = cut(
         estimate,
         breaks = c(20, 40, 75, 100, 125, 150, Inf)*1000,
@@ -36,49 +38,46 @@ basic_map <- mhi_raw_sf %>%
     theme_void(base_size = 14) +
     labs(fill="Median\nHousehold\nIncome") +
     ggtitle(
-        "Seattle Median Household Income",
+        "Miami Median Household Income",
         "MHI by Census Tract")
 
+basic_map
 ggsave("images/raw.png", basic_map,  width = 9*.7, height = 10*.7, bg = "white")
 
 # remove water
 mhi_sf <- mhi_raw_sf %>%
-    erase_water(area_threshold = 0.9)
+    erase_water(area_threshold = 0.2)
 
 # get map tiles adding road context
 dc <- mhi_sf %>%
     get_tiles(
-        provider = "Stamen.TonerLines",
-        zoom = 12, crop = T)
+        provider = "CartoDB.Voyager",
+        zoom = 10, crop = T)
 
 road_map <- ggplot() +
     geom_spatraster_rgb(data = dc) + # plot road map tiles
-    geom_sf(data = mhi_sf, aes(fill=MHIQ), alpha = .4) +
+    geom_sf(data = mhi_sf, aes(fill=MHIQ), alpha = .3, color=alpha("black",0.2)) +
     coord_sf(crs = 32148) +
     scale_fill_ordinal(na.translate=FALSE) + # remove "na" from legend
     theme_void(base_size = 14) +
     labs(fill="Median\nHousehold\nIncome") +
     theme(legend.position = c(1.13,.37), legend.background=element_blank())
 
+road_map
 ggsave(
     "images/updated.png", road_map,  width = 9*.7, height = 10*.7, bg = "white")
 
-# what are the geographies we want to focus on
-keep_geos <- str_c(
-    "5303300",
-    c(
-        "7201", "7202", "7302", "8002", "8003", "8101", "8102",
-        "8200", "8300", "8401", "8402", "8500","9200"))
 
-# cropped version of main spatial object focusing on downtown geographies
+# cropped version of main spatial object focusing on miami-beach geographies
 cropped_mhi_sf <- mhi_sf %>%
-    st_crop(st_bbox(filter(mhi_sf, GEOID %in% keep_geos)))
+    st_buffer(1e-5) %>%
+    st_intersection(miami_beach)
 
 # get the map tiles for downtown this time with road names
 dc2 <- cropped_mhi_sf %>%
     get_tiles(
-        provider = "Stamen.TonerHybrid",
-        zoom = 14, crop = T)
+        provider = "CartoDB.Voyager",
+        zoom = 13, crop = T)
 
 # make zoomed in plot
 inlet_map <- cropped_mhi_sf %>%
@@ -90,7 +89,7 @@ inlet_map <- cropped_mhi_sf %>%
     theme_void(base_size = 14) +
     theme(legend.position = "bottom") +
     layer_spatial(
-        data=st_bbox(filter(mhi_sf, GEOID %in% keep_geos)),
+        data=st_bbox(st_intersection(st_buffer(mhi_sf, 1e-5), miami_beach)),
         alpha = 0,
         size=1.15,
         color = "red") +
@@ -101,7 +100,7 @@ final_map <- ggdraw(
     road_map +
         theme(legend.position = "none") +
         layer_spatial(
-            data=st_bbox(filter(mhi_sf, GEOID %in% keep_geos)),
+            data=st_bbox(st_intersection(st_buffer(mhi_sf, 1e-5), miami_beach)),
             alpha = 0,
             size=1.15,
             color = "red")
@@ -109,7 +108,7 @@ final_map <- ggdraw(
     draw_plot(
         inlet_map+theme(legend.position = "none"),
         width = .36,
-        height = .36,
+        height = .56,
         x=-.01,
         y=.27) +
     draw_plot(
@@ -119,15 +118,11 @@ final_map <- ggdraw(
         x=.01,
         y=.01) +
     draw_text(
-        "Seattle Median Household Income",
-        x = .215,
+        "Miami-Dade Residential\nIncome Segregation",
+        x = .175,
         y = .9,
-        size = 24) +
-    draw_text(
-        "MHI by Census Tract",
-        x = .10,
-        y = .85,
-        size = 18
-    )
+        size = 24)
+
+final_map
 
 ggsave("./images/final.png", final_map, width = 9, height = 10, bg = "white")
